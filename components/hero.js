@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Elements } from "@stripe/react-stripe-js"
-import getStripe from "@/lib/stripe-client"
-import CheckoutForm from "@/components/CheckoutForm"
+import { loadStripe } from "@stripe/stripe-js"
 
 const coolPhrases = [
   "Unleash the Power of Entertainment",
@@ -11,9 +9,12 @@ const coolPhrases = [
   "The Future of TV is Here",
 ]
 
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY)
+
 export default function Hero() {
   const [currentPhrase, setCurrentPhrase] = useState(0)
-  const [clientSecret, setClientSecret] = useState("")
+  const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -27,26 +28,29 @@ export default function Hero() {
     visible: { opacity: 1, y: 0 },
   }
 
-  useEffect(() => {
-    // Create subscription on component mount and set clientSecret
-    async function createSubscription() {
-      const response = await fetch("/api/create-subscription", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customerId: "your-customer-id",
-          priceId: "your-price-id",
-        }),
-      })
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setLoading(true)
 
-      const { clientSecret } = await response.json()
-      setClientSecret(clientSecret)
+    const stripe = await stripePromise
+
+    const response = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const { sessionId } = await response.json()
+
+    const { error } = await stripe.redirectToCheckout({ sessionId })
+
+    if (error) {
+      console.error("Stripe error:", error)
     }
-
-    createSubscription()
-  }, [])
+    setLoading(false)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 text-white">
@@ -149,7 +153,7 @@ export default function Hero() {
 
         {/* Section 4 */}
         <motion.div
-          className="flex flex-col lg:flex-row-reverse items-start"
+          className="flex flex-col lg:flex-row-reverse items-start mb-32"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
@@ -170,9 +174,35 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        <Elements stripe={getStripe()}>
-          <CheckoutForm clientSecret={clientSecret} />
-        </Elements>
+        {/* Subscription Form */}
+        <motion.div
+          className="text-center mt-24"
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          transition={{ duration: 0.8, delay: 1 }}
+        >
+          <h2 className="text-4xl font-semibold mb-6">
+            Subscribe Now for Just $1/Month
+          </h2>
+          <form onSubmit={handleSubmit} className="flex flex-col items-center">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mb-4 px-4 py-2 text-lg rounded-full w-80 shadow-lg focus:outline-none"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-8 rounded-full shadow-xl transition duration-300"
+              disabled={loading}
+            >
+              {loading ? "Processing..." : "Subscribe"}
+            </button>
+          </form>
+        </motion.div>
       </div>
     </div>
   )

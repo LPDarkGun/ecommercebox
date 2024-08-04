@@ -1,45 +1,56 @@
-// pages/api/webhook.js
+import { buffer } from "micro"
+import Stripe from "stripe"
+import { MongoClient } from "mongodb"
 
-import stripe from "@/lib/stripe"
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2020-08-27",
+})
 
-export default async function handler(req, res) {
-  const buf = await buffer(req)
-  const sig = req.headers["stripe-signature"]
-
-  let event
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      buf,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    )
-  } catch (err) {
-    console.log(`⚠️  Webhook signature verification failed: ${err.message}`)
-    return res.status(400).send(`Webhook Error: ${err.message}`)
-  }
-
-  // Handle the event
-  switch (event.type) {
-    case "invoice.payment_succeeded":
-      const paymentIntent = event.data.object
-      console.log("PaymentIntent was successful!")
-      break
-    case "invoice.payment_failed":
-      const paymentFailedIntent = event.data.object
-      console.log("Payment failed!")
-      break
-    default:
-      console.log(`Unhandled event type ${event.type}`)
-  }
-
-  res.status(200).end()
+export const config = {
+  api: {
+    bodyParser: false,
+  },
 }
 
-async function buffer(readable) {
-  const chunks = []
-  for await (const chunk of readable) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk)
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+export default async function handler(req, res) {
+  if (req.method === "POST") {
+    const buf = await buffer(req)
+    const sig = req.headers["stripe-signature"]
+
+    let event
+
+    try {
+      event = stripe.webhooks.constructEvent(buf.toString(), sig, webhookSecret)
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${err.message}`)
+    }
+
+    const client = await MongoClient.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
+
+    const db = client.db("your-database-name")
+    const subscriptions = db.collection("subscriptions")
+
+    // Handle the event
+    switch (event.type) {
+      case "checkout.session.completed":
+        const session = event.data.object
+        await subscriptions.insertOne({
+          email: session.customer_email,
+          subscriptionId: session.subscription,
+        })
+        break
+      default:
+        console.log(`Unhandled event type ${event.type}`)
+    }
+
+    res.json({ received: true })
+  } else {
+    res.setHeader("Allow", "POST")
+    res.status(405).end("Method Not Allowed")
   }
-  return Buffer.concat(chunks)
 }
