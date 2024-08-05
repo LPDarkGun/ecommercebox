@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/router"
 import { signOut, signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 const coolPhrases = [
   "Unleash the Power of Entertainment",
@@ -111,38 +112,6 @@ export default function Hero() {
       console.error("Error during subscription:", err)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleManagePlan = async () => {
-    console.log("Session data:", session)
-    if (!session || !session.user.customerId) {
-      console.error("No customer ID found in session")
-      return
-    }
-
-    try {
-      const response = await fetch("/api/create-portal-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerId: session.user.customerId }),
-      })
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to create billing portal session: ${response.statusText}`
-        )
-      }
-
-      const { url } = await response.json()
-      if (!url) {
-        throw new Error("No URL returned from the billing portal session")
-      }
-
-      // Redirect to the billing portal
-      window.location.href = url
-    } catch (error) {
-      console.error("Error managing subscription:", error)
     }
   }
 
@@ -277,8 +246,8 @@ export default function Hero() {
             isSubscribed ? (
               <div>
                 <h2 className="text-4xl font-bold mb-4">You are subscribed!</h2>
-                <Button onClick={handleManagePlan}>
-                  Manage Your Subscription
+                <Button>
+                  <Link href="/account">Manage Your Subscription</Link>
                 </Button>
               </div>
             ) : (
