@@ -1,0 +1,15 @@
+{
+    "functions": {
+      "api/webhooks.js": {
+        "memory": 1024,
+        "maxDuration": 10
+      }
+    },
+    "routes": [
+      {
+        "src": "/api/webhooks",
+        "methods": ["POST"],
+        "dest": "/api/webhooks.js"
+      }
+    ]
+  }
