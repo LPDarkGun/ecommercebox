@@ -12,9 +12,9 @@ export const config = {
   },
 }
 
-// Helper function to read the request body
+// Helper function to read the raw body
 const getRawBody = async (req) => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let body = ""
     req.on("data", (chunk) => {
       body += chunk.toString()
@@ -22,6 +22,7 @@ const getRawBody = async (req) => {
     req.on("end", () => {
       resolve(body)
     })
+    req.on("error", reject)
   })
 }
 
@@ -35,7 +36,6 @@ const webhookHandler = async (req, res) => {
   const signature = req.headers["stripe-signature"]
 
   console.log("Received webhook. Signature:", signature)
-  console.log("Raw body:", rawBody)
 
   let event
 
@@ -46,7 +46,7 @@ const webhookHandler = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     )
   } catch (err) {
-    console.error(`Webhook signature verification failed:`, err.message)
+    console.error("Webhook signature verification failed:", err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
@@ -84,7 +84,7 @@ const webhookHandler = async (req, res) => {
         console.log(`Unhandled event type ${event.type}`)
     }
   } catch (error) {
-    console.error(`Error processing webhook:`, error)
+    console.error("Error processing webhook:", error)
     return res.status(500).json({ error: "Internal server error" })
   }
 
