@@ -312,7 +312,7 @@ export default function Hero() {
                         <SelectItem value="basicbase">
                           Basic - $15/month
                         </SelectItem>
-                        <SelectItem value="base">Base - $35/month</SelectItem>
+                        <SelectItem value="base">Base - $13/month</SelectItem>
                       </SelectContent>
                     </Select>
                   </form>

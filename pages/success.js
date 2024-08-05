@@ -63,13 +63,13 @@ export default function Success() {
   }
 
   return (
-    <div className="container mx-auto py-16 px-4">
+    <div className="py-16 px-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="max-w-2xl mx-auto">
+        <Card className="max-w-2xl mt-56 mx-auto">
           <CardHeader>
             <CardTitle className="text-4xl font-bold text-center text-green-600 dark:text-green-400">
               <CheckCircle className="inline-block mr-2" />
