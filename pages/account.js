@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/components/ui/use-toast"
 import { Badge } from "@/components/ui/badge"
+import { LogIn } from "lucide-react"
 
 const Account = () => {
   const { data: session, status } = useSession()
@@ -67,15 +68,50 @@ const Account = () => {
 
   if (!session) {
     return (
-      <div className="container mx-auto py-16 px-4 text-center">
-        <Card className="max-w-md mx-auto">
-          <CardContent>
-            <p className="mb-4">Please sign in to view your account details.</p>
-            <Button asChild>
-              <Link href="/sign-in">Sign In</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="mx-auto py-16 px-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <Card className="backdrop-blur-lg bg-white/10 border-white/20 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-3xl font-bold text-white text-center">
+                Welcome
+              </CardTitle>
+              <CardDescription className="text-purple-200 text-center">
+                Access your account to manage your subscription
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="mb-6 text-gray-300">
+                Please sign in to view your account details and manage your
+                subscription.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                <Button
+                  asChild
+                  className="w-full bg-purple-600 hover:bg-purple-700 transition-colors duration-300"
+                >
+                  <Link
+                    href="/sign-in"
+                    className="flex items-center justify-center"
+                  >
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Sign In
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/">
+                    <Home className="mr-2 h-4 w-4" />
+                    Back to Homepage
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     )
   }
