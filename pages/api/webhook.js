@@ -1,3 +1,4 @@
+import { buffer } from "micro"
 import Stripe from "stripe"
 import { mongooseConnect } from "@/lib/mongoose"
 import Order from "@/models/Order"
@@ -12,30 +13,24 @@ export const config = {
   },
 }
 
-// Helper function to read the request body
-const getRawBody = async (req) => {
-  return new Promise((resolve) => {
-    let body = ""
-    req.on("data", (chunk) => {
-      body += chunk.toString()
-    })
-    req.on("end", () => {
-      resolve(body)
-    })
-  })
-}
-
 const webhookHandler = async (req, res) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST")
     return res.status(405).end("Method Not Allowed")
   }
 
-  const rawBody = await getRawBody(req)
-  const signature = req.headers["stripe-signature"]
+  let rawBody
+  try {
+    rawBody = await buffer(req)
+    console.log("Raw body received:", rawBody.toString())
+  } catch (err) {
+    console.error("Error reading raw body:", err)
+    return res.status(500).send("Failed to read request body")
+  }
 
+  const signature = req.headers["stripe-signature"]
   console.log("Received webhook. Signature:", signature)
-  console.log("Raw body:", rawBody)
+  console.log("Headers:", req.headers)
 
   let event
 
@@ -45,25 +40,21 @@ const webhookHandler = async (req, res) => {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     )
+    console.log("Webhook verified. Event type:", event.type)
   } catch (err) {
     console.error(`Webhook signature verification failed:`, err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
-  console.log("Webhook verified. Event type:", event.type)
-
   try {
     await mongooseConnect()
-  } catch (error) {
-    console.error("MongoDB connection failed:", error)
-    return res.status(500).send("Database connection failed")
-  }
+    console.log("MongoDB connection successful")
 
-  try {
     switch (event.type) {
       case "customer.subscription.created":
       case "customer.subscription.updated":
         const subscription = event.data.object
+        console.log(`Processing subscription ${subscription.id}`)
         const updateResult = await Order.updateOne(
           { "subscription.customerId": subscription.customer },
           {

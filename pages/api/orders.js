@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         mode: "subscription",
         line_items: [
           {
-            price: "price_1Pk2OjLElu582MHu7IE8OzNn", // Replace with your actual Stripe price ID
+            price: "price_1PkR5aEgdqLNJO1LeQdOm7X1", // Replace with your actual Stripe price ID
             quantity: 1,
           },
         ],
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         zipCode,
         state,
         country,
-        line_items: [{ price: "price_1Pk2OjLElu582MHu7IE8OzNn", quantity: 1 }],
+        line_items: [{ price: "price_1PkR5aEgdqLNJO1LeQdOm7X1", quantity: 1 }],
         paid: false,
         subscription: {
           id: null,
