@@ -167,12 +167,14 @@ export default function Hero() {
             >
               Sign out
             </Button>
-            <Button
-              variant="secondary"
-              className="w-full sm:w-auto bg-purple-700 hover:bg-purple-600 text-white"
-            >
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
+           <Link href="/sign-in">
+              <Button
+                variant="secondary"
+                className="w-full sm:w-auto bg-purple-700 hover:bg-purple-600 text-white"
+              >
+                Sign in
+              </Button>
+            </Link>
           </motion.div>
           {session?.user?.name && (
             <motion.p
