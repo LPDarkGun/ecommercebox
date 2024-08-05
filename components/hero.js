@@ -141,6 +141,17 @@ export default function Hero() {
               {coolPhrases[currentPhrase]}
             </motion.p>
           </AnimatePresence>
+          <div className="mt-20 gap-2 flex flex-col w-full justify-center">
+            <div className="gap-4 flex w-full justify-center">
+              <Button onClick={() => signOut()}>Sign out</Button>
+              <Button>
+                <Link href="/sign-in">Sign in</Link>
+              </Button>
+            </div>
+            <p className="text-6xl font-semibold text-pink-400">
+              {session?.user?.name}
+            </p>
+          </div>
         </motion.header>
         {/* Sections would go here */}
         <motion.div
@@ -164,77 +175,11 @@ export default function Hero() {
             <p className="text-2xl mb-6">4-day archive for all channels</p>
             <motion.p className="text-6xl font-semibold text-pink-400">
               $1/month
-              <button onClick={() => signOut()}>Sign out</button>
-              <Link href="/sign-in">Sign in</Link>
             </motion.p>
           </div>
         </motion.div>
         {/* Section 2 */}
-        <motion.div
-          className="flex flex-col lg:flex-row-reverse items-start mb-32"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <div className="lg:w-3/5 mb-12 lg:mb-0">
-            <motion.img
-              src="/arrow_film.jpg"
-              alt="Arrow Film"
-              className="w-full h-auto rounded-3xl shadow-2xl"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-          <div className="lg:w-2/5 lg:pr-16 text-start">
-            <h2 className="text-5xl font-light mb-6">SD/HD CHANNELS</h2>
-            <p className="text-2xl">Enjoy crystal-clear picture quality</p>
-          </div>
-        </motion.div>
-        {/* Section 3 */}
-        <motion.div
-          className="flex flex-col lg:flex-row items-start mb-32"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <div className="lg:w-3/5 mb-12 lg:mb-0">
-            <motion.img
-              src="/shedule.jpg"
-              alt="Schedule"
-              className="w-full h-auto rounded-3xl shadow-2xl"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-          <div className="lg:w-2/5 lg:pl-16 text-start">
-            <h2 className="text-5xl font-light mb-6">TV GUIDE</h2>
-            <p className="text-2xl">Never miss your favorite shows</p>
-          </div>
-        </motion.div>
-        {/* Section 4 */}
-        <motion.div
-          className="flex flex-col lg:flex-row-reverse items-start mb-32"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-          transition={{ duration: 0.8, delay: 0.8 }}
-        >
-          <div className="lg:w-3/5 mb-12 lg:mb-0">
-            <motion.img
-              src="/search.jpg"
-              alt="Search"
-              className="w-full h-auto rounded-3xl shadow-2xl mb-6"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-          <div className="lg:w-2/5 lg:pr-16 text-start">
-            <h2 className="text-5xl font-light mb-6">SMART SEARCH</h2>
-            <p className="text-2xl">Find your perfect channel instantly</p>
-          </div>
-        </motion.div>
+
         {/* Subscription Section */}
         <motion.div
           className="flex flex-col items-center justify-center py-16"

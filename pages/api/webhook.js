@@ -4,7 +4,7 @@ import { mongooseConnect } from "@/lib/mongoose"
 import Order from "@/models/Order"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20",
+  apiVersion: "2023-08-16",
 })
 
 export const config = {
