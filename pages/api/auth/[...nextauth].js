@@ -59,5 +59,4 @@ export default NextAuth({
   pages: {
     signIn: "/sign-in", // Add this if you have a custom sign-in page
   },
-  debug: process.env.NODE_ENV === "development", // Enable debug messages in development
 })
