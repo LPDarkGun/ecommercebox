@@ -1,6 +1,6 @@
 {
     "functions": {
-      "api/webhooks.js": {
+      "pages/api/webhooks.js": {
         "memory": 1024,
         "maxDuration": 10
       }
@@ -9,7 +9,7 @@
       {
         "src": "/api/webhooks",
         "methods": ["POST"],
-        "dest": "/api/webhooks.js"
+        "dest": "/api/webhooks"
       }
     ]
   }
