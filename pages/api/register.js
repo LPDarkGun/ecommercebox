@@ -18,36 +18,30 @@ export default async function handler(req, res) {
     if (method === "POST") {
       const { name, email, password } = req.body
 
-      // Check if a user with the given email or name already exists
       const existingUser = await User.findOne({
         $or: [{ email: email.toLowerCase() }, { name }],
       })
 
       if (existingUser) {
-        // Respond with an error if the user already exists
         return res
           .status(400)
           .json({ error: "User with this email or name already exists." })
       }
 
-      // Hash the password before storing it
       const hashedPassword = await bcrypt.hash(password, 10)
 
-      // Create a new Stripe customer
       const stripeCustomer = await stripe.customers.create({
         email: email.toLowerCase(),
         name,
       })
 
-      // Create a new user document in the database
       const userDoc = await User.create({
         name,
         email: email.toLowerCase(),
         password: hashedPassword,
-        stripeCustomerId: stripeCustomer.id,
+        stripeCustomerId: stripeCustomer.id, // Ensure this is saved
       })
 
-      // Respond with the created user information
       return res.status(201).json({
         id: userDoc._id,
         name: userDoc.name,

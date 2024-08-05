@@ -38,8 +38,8 @@ export default function Hero() {
     }, 4000)
     return () => clearInterval(interval)
   }, [])
+
   useEffect(() => {
-    // Check subscription status if the user is logged in
     const fetchSubscriptionStatus = async () => {
       if (session) {
         try {
@@ -115,14 +115,35 @@ export default function Hero() {
   }
 
   const handleManagePlan = async () => {
-    const response = await fetch("/api/create-portal-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customerId: session.user.customerId }),
-    })
+    console.log("Session data:", session)
+    if (!session || !session.user.customerId) {
+      console.error("No customer ID found in session")
+      return
+    }
 
-    const { url } = await response.json()
-    window.location.href = url
+    try {
+      const response = await fetch("/api/create-portal-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: session.user.customerId }),
+      })
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to create billing portal session: ${response.statusText}`
+        )
+      }
+
+      const { url } = await response.json()
+      if (!url) {
+        throw new Error("No URL returned from the billing portal session")
+      }
+
+      // Redirect to the billing portal
+      window.location.href = url
+    } catch (error) {
+      console.error("Error managing subscription:", error)
+    }
   }
 
   return (

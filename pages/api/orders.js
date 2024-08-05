@@ -16,7 +16,7 @@ export default async function handler(req, res) {
       req.body
 
     try {
-      // Step 1: Create a new Stripe customer
+      // Step 1: Create a new Stripe customer if not already existing
       const customer = await stripe.customers.create({
         name,
         email,

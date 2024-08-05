@@ -14,9 +14,9 @@ const orderSchema = new Schema(
     paid: { type: Boolean, default: false },
     // New fields for subscription management
     subscription: {
-      id: { type: String, default: null }, // Stripe subscription ID
-      status: { type: String, default: null }, // Subscription status
-      customerId: { type: String, default: null }, // Stripe customer ID
+      id: { type: String, default: null },
+      status: { type: String, default: null },
+      customerId: { type: String, default: null },
     },
   },
   { timestamps: true }
