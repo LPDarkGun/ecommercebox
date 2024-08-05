@@ -167,7 +167,7 @@ export default function Hero() {
             >
               Sign out
             </Button>
-           <Link href="/sign-in">
+           <Link href="/sign-in" className="w-full">
               <Button
                 variant="secondary"
                 className="w-full sm:w-auto bg-purple-700 hover:bg-purple-600 text-white"
