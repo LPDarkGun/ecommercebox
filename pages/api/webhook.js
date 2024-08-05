@@ -30,10 +30,8 @@ const webhookHandler = async (req, res) => {
 
   const signature = req.headers["stripe-signature"]
   console.log("Received webhook. Signature:", signature)
-  console.log("Headers:", req.headers)
 
   let event
-
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -42,7 +40,7 @@ const webhookHandler = async (req, res) => {
     )
     console.log("Webhook verified. Event type:", event.type)
   } catch (err) {
-    console.error(`Webhook signature verification failed:`, err.message)
+    console.error("Webhook signature verification failed:", err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
@@ -75,7 +73,7 @@ const webhookHandler = async (req, res) => {
         console.log(`Unhandled event type ${event.type}`)
     }
   } catch (error) {
-    console.error(`Error processing webhook:`, error)
+    console.error("Error processing webhook:", error)
     return res.status(500).json({ error: "Internal server error" })
   }
 
