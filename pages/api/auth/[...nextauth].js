@@ -28,7 +28,7 @@ export default NextAuth({
             id: user.id,
             email: user.email,
             name: user.name,
-            stripeCustomerId: user.stripeCustomerId, // Ensure this is included
+            customerId: user.stripeCustomerId, // Changed to customerId for consistency
           }
         }
         return null
@@ -44,7 +44,7 @@ export default NextAuth({
         token.id = user.id
         token.email = user.email
         token.name = user.name
-        token.customerId = user.stripeCustomerId // Ensure this is set
+        token.customerId = user.customerId // Ensure this is set
       }
       return token
     },
@@ -56,4 +56,8 @@ export default NextAuth({
       return session
     },
   },
+  pages: {
+    signIn: "/sign-in", // Add this if you have a custom sign-in page
+  },
+  debug: process.env.NODE_ENV === "development", // Enable debug messages in development
 })

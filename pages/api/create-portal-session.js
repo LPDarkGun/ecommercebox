@@ -1,6 +1,6 @@
 // pages/api/create-portal-session.js
 import Stripe from "stripe"
-import { getSession } from "next-auth/react"
+import { getToken } from "next-auth/jwt"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-08-16",
@@ -14,10 +14,10 @@ export default async function handler(req, res) {
       .end("Method Not Allowed")
   }
 
-  // Get user session
-  const session = await getSession({ req })
+  // Get user token
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
 
-  if (!session || !session.user.customerId) {
+  if (!token || !token.customerId) {
     return res
       .status(403)
       .json({ error: "User is not authenticated or has no customer ID." })
@@ -25,13 +25,15 @@ export default async function handler(req, res) {
 
   try {
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: session.user.customerId,
-      return_url: `${req.headers.origin}/account`, // The URL the customer will be redirected to after managing billing
+      customer: token.customerId,
+      return_url: `${req.headers.origin}/account`,
     })
 
     res.status(200).json({ url: portalSession.url })
   } catch (error) {
     console.error("Error creating billing portal session:", error)
-    res.status(500).json({ error: "Internal Server Error" })
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", details: error.message })
   }
 }

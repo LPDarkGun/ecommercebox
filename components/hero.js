@@ -18,10 +18,10 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY)
 
 export default function Hero() {
   const { data: session, status } = useSession()
-  const router = useRouter()
   const [currentPhrase, setCurrentPhrase] = useState(0)
   const [loading, setLoading] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const [error, setError] = useState(null)
 
   const [userInfo, setUserInfo] = useState({
     name: "",
@@ -42,22 +42,14 @@ export default function Hero() {
 
   useEffect(() => {
     const fetchSubscriptionStatus = async () => {
-      if (session) {
+      if (session?.user?.customerId) {
         try {
-          console.log(
-            "Fetching subscription status for customerId:",
-            session.user.customerId
+          const response = await fetch(
+            `/api/orders?customerId=${session.user.customerId}`
           )
-          const response = await fetch("/api/subscription", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ customerId: session.user.customerId }),
-          })
-
           if (response.ok) {
             const data = await response.json()
-            console.log("Subscription data:", data)
-            setIsSubscribed(data.subscription?.status === "active")
+            setIsSubscribed(data.subscriptionStatus === "active")
           } else {
             console.error("Failed to fetch subscription:", response.statusText)
           }
@@ -82,23 +74,26 @@ export default function Hero() {
 
   const handleSubscribe = async () => {
     setLoading(true)
+    setError(null)
     try {
+      if (!session) {
+        throw new Error("Please sign in to subscribe")
+      }
+
       const response = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          name: userInfo.name,
-          email: userInfo.email,
-          phoneNumber: userInfo.phoneNumber,
-          address: userInfo.address,
-          zipCode: userInfo.zipCode,
-          state: userInfo.state,
-          country: userInfo.country,
+          ...userInfo,
+          customerId: session.user.customerId,
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create Stripe session")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create Stripe session")
       }
 
       const { sessionId } = await response.json()
@@ -106,10 +101,11 @@ export default function Hero() {
 
       const result = await stripe.redirectToCheckout({ sessionId })
       if (result.error) {
-        console.error(result.error.message)
+        throw new Error(result.error.message)
       }
     } catch (err) {
-      console.error("Error during subscription:", err)
+      console.error("Error during subscription:", err.message)
+      setError(err.message)
     } finally {
       setLoading(false)
     }
@@ -164,7 +160,7 @@ export default function Hero() {
             <motion.p className="text-6xl font-semibold text-pink-400">
               $1/month
               <button onClick={() => signOut()}>Sign out</button>
-              <button onClick={() => signIn()}>Sign In</button>
+              <Link href="/sign-in">Sign in</Link>
             </motion.p>
           </div>
         </motion.div>

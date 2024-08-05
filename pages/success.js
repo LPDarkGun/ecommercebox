@@ -4,24 +4,35 @@ import { useRouter } from "next/router"
 export default function Success() {
   const router = useRouter()
   const [subscriptionDetails, setSubscriptionDetails] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    // Extract the session ID from the URL
     const { session_id } = router.query
 
-    // Fetch subscription details from the server using the session ID
     const fetchSubscriptionDetails = async () => {
       if (session_id) {
-        const response = await fetch(
-          `/api/subscription-details?session_id=${session_id}`
-        )
-        const data = await response.json()
-        setSubscriptionDetails(data)
+        try {
+          const response = await fetch(
+            `/api/subscription-details?session_id=${session_id}`
+          )
+          if (!response.ok) {
+            throw new Error("Failed to fetch subscription details")
+          }
+          const data = await response.json()
+          setSubscriptionDetails(data)
+        } catch (err) {
+          console.error("Error fetching subscription details:", err)
+          setError(err.message)
+        }
       }
     }
 
     fetchSubscriptionDetails()
   }, [router.query])
+
+  if (error) {
+    return <div className="text-center text-red-500">Error: {error}</div>
+  }
 
   return (
     <div className="container mx-auto py-16 px-4">
