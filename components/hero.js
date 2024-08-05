@@ -42,6 +42,10 @@ export default function Hero() {
 
   useEffect(() => {
     const fetchSubscriptionStatus = async () => {
+      console.log(
+        "Fetching subscription status for customerId:",
+        session?.user?.customerId
+      )
       if (session?.user?.customerId) {
         try {
           const response = await fetch(
@@ -50,6 +54,7 @@ export default function Hero() {
           if (response.ok) {
             const data = await response.json()
             setIsSubscribed(data.subscriptionStatus === "active")
+            console.log("Subscription data:", data)
           } else {
             console.error("Failed to fetch subscription:", response.statusText)
           }
