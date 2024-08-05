@@ -1,10 +1,7 @@
-// pages/api/webhooks.js
-import { buffer } from "micro"
 import Stripe from "stripe"
 import { mongooseConnect } from "@/lib/mongoose"
 import Order from "@/models/Order"
 
-// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2024-06-20",
 })
@@ -15,32 +12,53 @@ export const config = {
   },
 }
 
+// Helper function to read the request body
+const getRawBody = async (req) => {
+  return new Promise((resolve) => {
+    let body = ""
+    req.on("data", (chunk) => {
+      body += chunk.toString()
+    })
+    req.on("end", () => {
+      resolve(body)
+    })
+  })
+}
+
 const webhookHandler = async (req, res) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST")
     return res.status(405).end("Method Not Allowed")
   }
 
+  const rawBody = await getRawBody(req)
+  const signature = req.headers["stripe-signature"]
+
+  console.log("Received webhook. Signature:", signature)
+  console.log("Raw body:", rawBody)
+
   let event
 
   try {
-    const rawBody = await buffer(req)
-    const signature = req.headers["stripe-signature"]
-
     event = stripe.webhooks.constructEvent(
-      rawBody.toString(), // Convert buffer to string
+      rawBody,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     )
   } catch (err) {
-    console.error(`Webhook signature verification failed: ${err.message}`)
+    console.error(`Webhook signature verification failed:`, err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
-  // Connect to MongoDB only if the signature is verified
-  await mongooseConnect()
+  console.log("Webhook verified. Event type:", event.type)
 
-  // Handle the event
+  try {
+    await mongooseConnect()
+  } catch (error) {
+    console.error("MongoDB connection failed:", error)
+    return res.status(500).send("Database connection failed")
+  }
+
   try {
     switch (event.type) {
       case "customer.subscription.created":
@@ -66,11 +84,10 @@ const webhookHandler = async (req, res) => {
         console.log(`Unhandled event type ${event.type}`)
     }
   } catch (error) {
-    console.error(`Error processing webhook: ${error.message}`)
+    console.error(`Error processing webhook:`, error)
     return res.status(500).json({ error: "Internal server error" })
   }
 
-  // Return a 200 response to acknowledge receipt of the event
   res.status(200).json({ received: true })
 }
 
