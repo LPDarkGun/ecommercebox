@@ -157,7 +157,7 @@ export default function Hero() {
         </motion.header>
         {/* Sections would go here */}
 
-        {status === "authenticated" ? (
+        {status === "unauthenticated" ? (
           <motion.div
             className="flex flex-col lg:flex-row items-start mb-32"
             initial="hidden"
