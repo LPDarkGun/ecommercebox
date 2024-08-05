@@ -1,7 +1,0 @@
-{
-    "functions": {
-      "api/webhook": {
-        "maxDuration": 10
-      }
-    }
-  }
