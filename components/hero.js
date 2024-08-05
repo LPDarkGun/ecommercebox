@@ -67,6 +67,8 @@ export default function Hero() {
     fetchSubscriptionStatus()
   }, [session])
 
+  console.log(status)
+
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -154,31 +156,37 @@ export default function Hero() {
           </div>
         </motion.header>
         {/* Sections would go here */}
-        <motion.div
-          className="flex flex-col lg:flex-row items-start mb-32"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <div className="lg:w-3/5 mb-12 lg:mb-0">
-            <motion.img
-              src="/5.jpg"
-              alt="Bar Image"
-              className="w-full h-auto rounded-3xl shadow-2xl"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-          {/* <div className="lg:w-2/5 lg:pl-16 text-start">
-            <h2 className="text-5xl font-light mb-6">1000+ CHANNELS</h2>
-            <p className="text-2xl mb-6">4-day archive for all channels</p>
-            <motion.p className="text-6xl font-semibold text-pink-400">
-              $1/month
-            </motion.p>
-          </div> */}
-          {/*lg:w-3/5*/}
-        </motion.div>
+
+        {status === "authenticated" ? (
+          <motion.div
+            className="flex flex-col lg:flex-row items-start mb-32"
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <div className="lg:w-[100%] mb-12 lg:mb-0">
+              <motion.img
+                src="/5.jpg"
+                alt="Bar Image"
+                className="w-full h-auto rounded-3xl shadow-2xl"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+            {/* <div className="lg:w-2/5 lg:pl-16 text-start">
+                 <h2 className="text-5xl font-light mb-6">1000+ CHANNELS</h2>
+                 <p className="text-2xl mb-6">4-day archive for all channels</p>
+                 <motion.p className="text-6xl font-semibold text-pink-400">
+                   $1/month
+                 </motion.p>
+               </div> */}
+            {/*lg:w-3/5*/}
+          </motion.div>
+        ) : (
+          <div className="hidden">hey</div>
+        )}
+
         {/* Section 2 */}
 
         {/* Subscription Section */}
