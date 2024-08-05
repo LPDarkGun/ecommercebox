@@ -177,7 +177,7 @@ export default function Hero() {
               $1/month
             </motion.p>
           </div> */}
-          {/*w-3/5*/}
+          {/*lg:w-3/5*/}
         </motion.div>
         {/* Section 2 */}
 
