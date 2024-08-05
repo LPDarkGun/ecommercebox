@@ -1,17 +1,23 @@
-import { model, models } from "mongoose"
-import mongoose from "mongoose"
+import { model, models, Schema } from "mongoose"
 
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema(
   {
     email: {
       type: String,
       required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
     },
     password: {
       type: String,
       required: true,
     },
     name: {
+      type: String,
+      required: true,
+    },
+    stripeCustomerId: {
       type: String,
       required: true,
     },

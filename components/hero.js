@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { loadStripe } from "@stripe/stripe-js"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/router"
+import { signOut, signIn } from "next-auth/react"
+import { Button } from "@/components/ui/button"
 
 const coolPhrases = [
   "Unleash the Power of Entertainment",
@@ -12,9 +16,21 @@ const coolPhrases = [
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY)
 
 export default function Hero() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [currentPhrase, setCurrentPhrase] = useState(0)
-  const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    zipCode: "",
+    state: "",
+    country: "",
+  })
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -22,34 +38,91 @@ export default function Hero() {
     }, 4000)
     return () => clearInterval(interval)
   }, [])
+  useEffect(() => {
+    // Check subscription status if the user is logged in
+    const fetchSubscriptionStatus = async () => {
+      if (session) {
+        try {
+          console.log(
+            "Fetching subscription status for customerId:",
+            session.user.customerId
+          )
+          const response = await fetch("/api/subscription", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ customerId: session.user.customerId }),
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            console.log("Subscription data:", data)
+            setIsSubscribed(data.subscription?.status === "active")
+          } else {
+            console.error("Failed to fetch subscription:", response.statusText)
+          }
+        } catch (error) {
+          console.error("Error fetching subscription status:", error)
+        }
+      }
+    }
+
+    fetchSubscriptionStatus()
+  }, [session])
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setUserInfo((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubscribe = async () => {
     setLoading(true)
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: userInfo.name,
+          email: userInfo.email,
+          phoneNumber: userInfo.phoneNumber,
+          address: userInfo.address,
+          zipCode: userInfo.zipCode,
+          state: userInfo.state,
+          country: userInfo.country,
+        }),
+      })
 
-    const stripe = await stripePromise
+      if (!response.ok) {
+        throw new Error("Failed to create Stripe session")
+      }
 
-    const response = await fetch("/api/create-checkout-session", {
+      const { sessionId } = await response.json()
+      const stripe = await stripePromise
+
+      const result = await stripe.redirectToCheckout({ sessionId })
+      if (result.error) {
+        console.error(result.error.message)
+      }
+    } catch (err) {
+      console.error("Error during subscription:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleManagePlan = async () => {
+    const response = await fetch("/api/create-portal-session", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customerId: session.user.customerId }),
     })
 
-    const { sessionId } = await response.json()
-
-    const { error } = await stripe.redirectToCheckout({ sessionId })
-
-    if (error) {
-      console.error("Stripe error:", error)
-    }
-    setLoading(false)
+    const { url } = await response.json()
+    window.location.href = url
   }
 
   return (
@@ -78,8 +151,7 @@ export default function Hero() {
             </motion.p>
           </AnimatePresence>
         </motion.header>
-
-        {/* Section 1 */}
+        {/* Sections would go here */}
         <motion.div
           className="flex flex-col lg:flex-row items-start mb-32"
           initial="hidden"
@@ -101,10 +173,11 @@ export default function Hero() {
             <p className="text-2xl mb-6">4-day archive for all channels</p>
             <motion.p className="text-6xl font-semibold text-pink-400">
               $1/month
+              <button onClick={() => signOut()}>Sign out</button>
+              <button onClick={() => signIn()}>Sign In</button>
             </motion.p>
           </div>
         </motion.div>
-
         {/* Section 2 */}
         <motion.div
           className="flex flex-col lg:flex-row-reverse items-start mb-32"
@@ -127,7 +200,6 @@ export default function Hero() {
             <p className="text-2xl">Enjoy crystal-clear picture quality</p>
           </div>
         </motion.div>
-
         {/* Section 3 */}
         <motion.div
           className="flex flex-col lg:flex-row items-start mb-32"
@@ -150,7 +222,6 @@ export default function Hero() {
             <p className="text-2xl">Never miss your favorite shows</p>
           </div>
         </motion.div>
-
         {/* Section 4 */}
         <motion.div
           className="flex flex-col lg:flex-row-reverse items-start mb-32"
@@ -173,35 +244,98 @@ export default function Hero() {
             <p className="text-2xl">Find your perfect channel instantly</p>
           </div>
         </motion.div>
-
-        {/* Subscription Form */}
+        {/* Subscription Section */}
         <motion.div
-          className="text-center mt-24"
+          className="flex flex-col items-center justify-center py-16"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
-          transition={{ duration: 0.8, delay: 1 }}
+          transition={{ duration: 0.8, delay: 1.0 }}
         >
-          <h2 className="text-4xl font-semibold mb-6">
-            Subscribe Now for Just $1/Month
-          </h2>
-          <form onSubmit={handleSubmit} className="flex flex-col items-center">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mb-4 px-4 py-2 text-lg rounded-full w-80 shadow-lg focus:outline-none"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-8 rounded-full shadow-xl transition duration-300"
-              disabled={loading}
-            >
-              {loading ? "Processing..." : "Subscribe"}
-            </button>
-          </form>
+          {status === "authenticated" ? (
+            isSubscribed ? (
+              <div>
+                <h2 className="text-4xl font-bold mb-4">You are subscribed!</h2>
+                <Button onClick={handleManagePlan}>
+                  Manage Your Subscription
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-4xl font-bold mb-4">Subscribe Now</h2>
+                <form className="space-y-4">
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Name"
+                    value={userInfo.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={userInfo.email}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    placeholder="Phone Number"
+                    value={userInfo.phoneNumber}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="address"
+                    placeholder="Address"
+                    value={userInfo.address}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="zipCode"
+                    placeholder="Zip Code"
+                    value={userInfo.zipCode}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="state"
+                    placeholder="State"
+                    value={userInfo.state}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="country"
+                    placeholder="Country"
+                    value={userInfo.country}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </form>
+                <Button onClick={handleSubscribe} disabled={loading}>
+                  {loading ? "Processing..." : "Subscribe for $1/month"}
+                </Button>
+              </div>
+            )
+          ) : (
+            <p className="text-2xl">Please sign in to subscribe.</p>
+          )}
         </motion.div>
       </div>
     </div>

@@ -1,9 +1,11 @@
+// pages/api/webhook.js
 import { buffer } from "micro"
 import Stripe from "stripe"
-import { MongoClient } from "mongodb"
+import { mongooseConnect } from "@/lib/mongoose"
+import Order from "@/models/Order"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2020-08-27",
+  apiVersion: "2023-08-16",
 })
 
 export const config = {
@@ -12,9 +14,9 @@ export const config = {
   },
 }
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+const webhookHandler = async (req, res) => {
+  await mongooseConnect()
 
-export default async function handler(req, res) {
   if (req.method === "POST") {
     const buf = await buffer(req)
     const sig = req.headers["stripe-signature"]
@@ -22,27 +24,30 @@ export default async function handler(req, res) {
     let event
 
     try {
-      event = stripe.webhooks.constructEvent(buf.toString(), sig, webhookSecret)
+      event = stripe.webhooks.constructEvent(
+        buf,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      )
     } catch (err) {
       return res.status(400).send(`Webhook Error: ${err.message}`)
     }
 
-    const client = await MongoClient.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
-
-    const db = client.db("your-database-name")
-    const subscriptions = db.collection("subscriptions")
-
-    // Handle the event
     switch (event.type) {
-      case "checkout.session.completed":
-        const session = event.data.object
-        await subscriptions.insertOne({
-          email: session.customer_email,
-          subscriptionId: session.subscription,
-        })
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+        const subscription = event.data.object
+        // Update order based on subscription status
+        await Order.updateOne(
+          { "subscription.customerId": subscription.customer },
+          {
+            $set: {
+              "subscription.id": subscription.id,
+              "subscription.status": subscription.status,
+              paid: subscription.status === "active",
+            },
+          }
+        )
         break
       default:
         console.log(`Unhandled event type ${event.type}`)
@@ -54,3 +59,5 @@ export default async function handler(req, res) {
     res.status(405).end("Method Not Allowed")
   }
 }
+
+export default webhookHandler

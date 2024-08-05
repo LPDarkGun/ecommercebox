@@ -1,15 +1,20 @@
+// Login.js
 import React, { useState } from "react"
 import { signIn } from "next-auth/react"
-import { Button } from "./ui/button" // Custom Button component
+import { Button } from "./ui/button"
 import Link from "next/link"
 
 const Login = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    setLoading(true) // Start loading
+    setError("") // Reset error state
+
     const result = await signIn("credentials", {
       redirect: false,
       email,
@@ -17,10 +22,12 @@ const Login = () => {
     })
 
     if (result.error) {
-      setError(result.error)
+      setError(result.error || "An error occurred during login")
     } else {
       window.location.href = "/"
     }
+
+    setLoading(false) // Stop loading
   }
 
   return (
@@ -53,8 +60,8 @@ const Login = () => {
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <Button type="submit" className="w-full">
-          Login
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
         </Button>
         {error && <p className="mt-2 text-red-500 text-center">{error}</p>}
       </form>
