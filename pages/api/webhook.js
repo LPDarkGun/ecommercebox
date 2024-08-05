@@ -12,30 +12,19 @@ export const config = {
   },
 }
 
-// Helper function to read the raw body
-const getRawBody = async (req) => {
-  return new Promise((resolve, reject) => {
-    let body = ""
-    req.on("data", (chunk) => {
-      body += chunk.toString()
-    })
-    req.on("end", () => {
-      resolve(body)
-    })
-    req.on("error", reject)
-  })
-}
-
 const webhookHandler = async (req, res) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST")
     return res.status(405).end("Method Not Allowed")
   }
 
-  const rawBody = await getRawBody(req)
-  const signature = req.headers["stripe-signature"]
+  const chunks = []
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk)
+  }
+  const rawBody = Buffer.concat(chunks)
 
-  console.log("Received webhook. Signature:", signature)
+  const signature = req.headers["stripe-signature"]
 
   let event
 
@@ -46,7 +35,7 @@ const webhookHandler = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     )
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message)
+    console.error(`Webhook Error: ${err.message}`)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
@@ -84,7 +73,7 @@ const webhookHandler = async (req, res) => {
         console.log(`Unhandled event type ${event.type}`)
     }
   } catch (error) {
-    console.error("Error processing webhook:", error)
+    console.error(`Error processing webhook:`, error)
     return res.status(500).json({ error: "Internal server error" })
   }
 
