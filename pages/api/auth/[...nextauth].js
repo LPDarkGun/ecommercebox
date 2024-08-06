@@ -1,4 +1,3 @@
-// pages/api/auth/[...nextauth].js
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import User from "@/models/User"
@@ -11,24 +10,29 @@ export default NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: {
-          label: "Email",
-          type: "email",
-          placeholder: "jsmith@example.com",
+        emailOrPhone: {
+          label: "Email or Phone",
+          type: "text",
+          placeholder: "jsmith@example.com or 1234567890",
         },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const { email, password } = credentials
+        const { emailOrPhone, password } = credentials
         await mongooseConnect()
-        const user = await User.findOne({ email: email.toLowerCase() }).exec()
+
+        // Find user by either email or phone
+        const user = await User.findOne({
+          $or: [{ email: emailOrPhone.toLowerCase() }, { phone: emailOrPhone }],
+        }).exec()
 
         if (user && (await bcrypt.compare(password, user.password))) {
           return {
             id: user.id,
             email: user.email,
+            phone: user.phone,
             name: user.name,
-            customerId: user.stripeCustomerId, // Changed to customerId for consistency
+            customerId: user.stripeCustomerId,
           }
         }
         return null
@@ -43,20 +47,22 @@ export default NextAuth({
       if (user) {
         token.id = user.id
         token.email = user.email
+        token.phone = user.phone
         token.name = user.name
-        token.customerId = user.customerId // Ensure this is set
+        token.customerId = user.customerId
       }
       return token
     },
     async session({ session, token }) {
       session.user.id = token.id
       session.user.email = token.email
+      session.user.phone = token.phone
       session.user.name = token.name
-      session.user.customerId = token.customerId // Ensure this is set
+      session.user.customerId = token.customerId
       return session
     },
   },
   pages: {
-    signIn: "/sign-in", // Add this if you have a custom sign-in page
+    signIn: "/sign-in",
   },
 })
