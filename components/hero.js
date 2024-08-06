@@ -160,19 +160,23 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.5 }}
           >
-            <Button
-              variant="outline"
-              onClick={() => signOut()}
-              className="w-full sm:w-auto bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700"
-            >
-              Sign out
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full sm:w-auto bg-purple-700 hover:bg-purple-600 text-white"
-            >
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
+            {session ? (
+              <Button
+                variant="outline"
+                onClick={() => signOut()}
+                className="w-full sm:w-auto bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700 py-2 px-4 text-lg"
+              >
+                Sign out
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                className="w-full sm:w-auto bg-purple-700 hover:bg-purple-600 text-white py-2 px-4 text-lg"
+                onClick={() => signIn()}
+              >
+                Sign in
+              </Button>
+            )}
           </motion.div>
           {session?.user?.name && (
             <motion.p

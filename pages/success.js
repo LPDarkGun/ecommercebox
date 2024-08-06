@@ -46,7 +46,7 @@ export default function Success() {
 
   if (error) {
     return (
-      <div className="container mx-auto py-16 px-4 text-center">
+      <div className="container mx-auto py-8 px-4 sm:py-16 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -63,15 +63,16 @@ export default function Success() {
   }
 
   return (
-    <div className="py-16 px-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen">
+    <div className="py-8 px-4 sm:py-16 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="w-full max-w-2xl"
       >
-        <Card className="max-w-2xl mt-56 mx-auto">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-4xl font-bold text-center text-green-600 dark:text-green-400">
+            <CardTitle className="text-3xl sm:text-4xl font-bold text-center text-green-600 dark:text-green-400">
               <CheckCircle className="inline-block mr-2" />
               Payment Successful!
             </CardTitle>
@@ -86,44 +87,50 @@ export default function Success() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                <h2 className="text-2xl font-semibold mb-4 text-center">
+                <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-center">
                   Subscription Details
                 </h2>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                     <strong>Plan:</strong>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="mt-1 sm:mt-0">
                       {subscriptionDetails.plan}
                     </Badge>
                   </div>
                   <Separator />
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                     <strong>Status:</strong>
                     <Badge
                       variant="outline"
-                      className="bg-green-100 text-green-800"
+                      className="bg-green-100 text-green-800 mt-1 sm:mt-0"
                     >
                       {subscriptionDetails.status}
                     </Badge>
                   </div>
                   <Separator />
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                     <strong>Amount Paid:</strong>
-                    <span className="text-lg font-semibold">
+                    <span className="text-lg font-semibold mt-1 sm:mt-0">
                       ${subscriptionDetails.amount / 100}
                     </span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                     <strong>Next Billing Date:</strong>
-                    <span>{subscriptionDetails.nextBillingDate}</span>
+                    <span className="mt-1 sm:mt-0">
+                      {subscriptionDetails.nextBillingDate}
+                    </span>
                   </div>
                 </div>
-                <div className="mt-8 flex justify-center space-x-4">
-                  <Button asChild>
+                <div className="mt-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  <Button asChild className="w-full sm:w-auto">
                     <Link href="/account">Manage Your Subscription</Link>
                   </Button>
-                  <Button asChild variant="outline">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                  >
                     <Link href="/">Go to Homepage</Link>
                   </Button>
                 </div>

@@ -59,7 +59,7 @@ const Account = () => {
 
   if (status === "loading") {
     return (
-      <div className="container mx-auto py-16 px-4 text-center">
+      <div className="container mx-auto py-8 px-4 sm:py-16 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto" />
         <p className="mt-2">Loading account details...</p>
       </div>
@@ -68,7 +68,7 @@ const Account = () => {
 
   if (!session) {
     return (
-      <div className="mx-auto py-16 px-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center">
+      <div className="mx-auto py-8 px-4 sm:py-16 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -77,7 +77,7 @@ const Account = () => {
         >
           <Card className="backdrop-blur-lg bg-white/10 border-white/20 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-3xl font-bold text-white text-center">
+              <CardTitle className="text-2xl sm:text-3xl font-bold text-white text-center">
                 Welcome
               </CardTitle>
               <CardDescription className="text-purple-200 text-center">
@@ -117,7 +117,7 @@ const Account = () => {
   }
 
   return (
-    <div className=" mx-auto py-16 px-4 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen">
+    <div className="mx-auto py-8 px-4 sm:py-16 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -125,15 +125,15 @@ const Account = () => {
       >
         <Card className="max-w-3xl mx-auto shadow-lg">
           <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
               <Avatar className="h-20 w-20 border-4 border-white">
                 <AvatarImage src={session.user.image} alt={session.user.name} />
                 <AvatarFallback className="text-2xl text-black">
                   {session.user.name[0]}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <CardTitle className="text-4xl font-bold">
+              <div className="text-center sm:text-left">
+                <CardTitle className="text-3xl sm:text-4xl font-bold">
                   Welcome, {session.user.name}
                 </CardTitle>
                 <CardDescription className="text-purple-100">
@@ -182,8 +182,12 @@ const Account = () => {
                 Manage your subscription and billing details through our secure
                 Stripe portal.
               </p>
-              <div className="flex space-x-4">
-                <Button onClick={fetchPortalSession} disabled={loading}>
+              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <Button
+                  onClick={fetchPortalSession}
+                  disabled={loading}
+                  className="w-full sm:w-auto"
+                >
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -193,7 +197,7 @@ const Account = () => {
                     "Manage Subscription"
                   )}
                 </Button>
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="w-full sm:w-auto">
                   <Link href="/">
                     <Home className="mr-2 h-4 w-4" />
                     Back to Homepage
