@@ -12,7 +12,6 @@ export const config = {
     bodyParser: false,
   },
 }
-
 const webhookHandler = async (req, res) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST")
@@ -22,14 +21,12 @@ const webhookHandler = async (req, res) => {
   let rawBody
   try {
     rawBody = await buffer(req)
-    console.log("Raw body received:", rawBody.toString())
   } catch (err) {
     console.error("Error reading raw body:", err)
     return res.status(500).send("Failed to read request body")
   }
 
   const signature = req.headers["stripe-signature"]
-  console.log("Received webhook. Signature:", signature)
 
   let event
   try {
@@ -38,7 +35,6 @@ const webhookHandler = async (req, res) => {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     )
-    console.log("Webhook verified. Event type:", event.type)
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
@@ -46,13 +42,13 @@ const webhookHandler = async (req, res) => {
 
   try {
     await mongooseConnect()
-    console.log("MongoDB connection successful")
 
     switch (event.type) {
-      case "customer.subscription.created":
-      case "customer.subscription.updated":
+      case "customer.subscription.created": {
         const subscription = event.data.object
-        console.log(`Processing subscription ${subscription.id}`)
+        console.log(`Subscription created: ${subscription.id}`)
+
+        // Update order in the database
         const updateResult = await Order.updateOne(
           { "subscription.customerId": subscription.customer },
           {
@@ -63,12 +59,71 @@ const webhookHandler = async (req, res) => {
             },
           }
         )
+
         console.log(
-          `Subscription ${subscription.id} updated. Result:`,
+          `Order updated for subscription creation. Result:`,
           updateResult
         )
-        break
 
+        break
+      }
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object
+        console.log(`Subscription canceled: ${subscription.id}`)
+
+        const updateResult = await Order.updateOne(
+          { "subscription.id": subscription.id },
+          {
+            $set: {
+              "subscription.status": "canceled",
+              paid: false,
+            },
+          }
+        )
+
+        console.log(
+          `Order updated after subscription cancellation. Result:`,
+          updateResult
+        )
+
+        break
+      }
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object
+        console.log(`Invoice payment succeeded for ${invoice.id}`)
+
+        const updateResult = await Order.updateOne(
+          { "subscription.id": invoice.subscription },
+          {
+            $set: {
+              paid: true,
+            },
+          }
+        )
+
+        console.log(`Order updated after payment. Result:`, updateResult)
+
+        // Note: Stripe sends the receipt automatically if enabled in settings
+
+        break
+      }
+      case "invoice.payment_failed": {
+        const invoice = event.data.object
+        console.log(`Invoice payment failed for ${invoice.id}`)
+
+        const updateResult = await Order.updateOne(
+          { "subscription.id": invoice.subscription },
+          {
+            $set: {
+              paid: false,
+            },
+          }
+        )
+
+        console.log(`Order updated after failed payment. Result:`, updateResult)
+
+        break
+      }
       default:
         console.log(`Unhandled event type ${event.type}`)
     }

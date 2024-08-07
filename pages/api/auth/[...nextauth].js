@@ -10,27 +10,26 @@ export default NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        emailOrPhone: {
-          label: "Email or Phone",
+        email: {
+          label: "Email",
           type: "text",
-          placeholder: "jsmith@example.com or 1234567890",
+          placeholder: "jsmith@example.com",
         },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const { emailOrPhone, password } = credentials
+        const { email, password } = credentials
         await mongooseConnect()
 
-        // Find user by either email or phone
+        // Find user by email
         const user = await User.findOne({
-          $or: [{ email: emailOrPhone.toLowerCase() }, { phone: emailOrPhone }],
+          email: email.toLowerCase(),
         }).exec()
 
         if (user && (await bcrypt.compare(password, user.password))) {
           return {
             id: user.id,
             email: user.email,
-            phone: user.phone,
             name: user.name,
             customerId: user.stripeCustomerId,
           }
@@ -47,7 +46,6 @@ export default NextAuth({
       if (user) {
         token.id = user.id
         token.email = user.email
-        token.phone = user.phone
         token.name = user.name
         token.customerId = user.customerId
       }
@@ -56,7 +54,6 @@ export default NextAuth({
     async session({ session, token }) {
       session.user.id = token.id
       session.user.email = token.email
-      session.user.phone = token.phone
       session.user.name = token.name
       session.user.customerId = token.customerId
       return session

@@ -5,20 +5,9 @@ const userSchema = new Schema(
     email: {
       type: String,
       unique: true,
-      sparse: true,
       lowercase: true,
       trim: true,
-      required: function () {
-        return !this.phone // Email is required if phone is not provided
-      },
-    },
-    phone: {
-      type: String,
-      unique: true,
-      sparse: true,
-      required: function () {
-        return !this.email // Phone is required if email is not provided
-      },
+      required: true,
     },
     password: {
       type: String,

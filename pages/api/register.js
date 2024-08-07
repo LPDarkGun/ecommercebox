@@ -14,36 +14,32 @@ export default async function handler(req, res) {
 
   try {
     if (method === "POST") {
-      const { name, email, phone, password } = req.body
+      const { name, email, password } = req.body
 
-      if (!email && !phone) {
-        return res
-          .status(400)
-          .json({ error: "Email or phone number is required." })
+      if (!email) {
+        return res.status(400).json({ error: "Email is required." })
       }
 
       const existingUser = await User.findOne({
-        $or: [{ email: email?.toLowerCase() }, { phone }].filter(Boolean),
+        email: email.toLowerCase(),
       })
 
       if (existingUser) {
         return res.status(400).json({
-          error: "User with this email or phone number already exists.",
+          error: "User with this email already exists.",
         })
       }
 
       const hashedPassword = await bcrypt.hash(password, 10)
 
       const stripeCustomer = await stripe.customers.create({
-        email: email?.toLowerCase() || undefined,
-        phone,
+        email: email.toLowerCase(),
         name,
       })
 
       const userDoc = await User.create({
         name,
-        email: email ? email.toLowerCase() : undefined,
-        phone: phone || undefined,
+        email: email.toLowerCase(),
         password: hashedPassword,
         stripeCustomerId: stripeCustomer.id,
       })
@@ -58,16 +54,16 @@ export default async function handler(req, res) {
     }
 
     if (method === "GET") {
-      const { email, phone } = req.query
+      const { email } = req.query
 
-      if (!email && !phone) {
+      if (!email) {
         return res
           .status(400)
-          .json({ error: "Email or phone query parameter is required." })
+          .json({ error: "Email query parameter is required." })
       }
 
       const user = await User.findOne({
-        $or: [{ email: email?.toLowerCase() }, { phone }].filter(Boolean),
+        email: email.toLowerCase(),
       })
 
       if (!user) {
@@ -84,16 +80,16 @@ export default async function handler(req, res) {
     }
 
     if (method === "DELETE") {
-      const { email, phone } = req.query
+      const { email } = req.query
 
-      if (!email && !phone) {
+      if (!email) {
         return res
           .status(400)
-          .json({ error: "Email or phone query parameter is required." })
+          .json({ error: "Email query parameter is required." })
       }
 
       const user = await User.findOneAndDelete({
-        $or: [{ email: email?.toLowerCase() }, { phone }].filter(Boolean),
+        email: email.toLowerCase(),
       })
 
       if (!user) {

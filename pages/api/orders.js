@@ -45,7 +45,7 @@ export default async function handler(req, res) {
             quantity: 1,
           },
         ],
-        customer: customerId,
+        customer: customerId, // Use only the customerId
         success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.headers.origin}/cancel`,
       })
