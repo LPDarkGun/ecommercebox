@@ -4,13 +4,12 @@ import { mongooseConnect } from "@/lib/mongoose"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20",
+  apiVersion: "2023-08-16",
 })
 
 export default async function handler(req, res) {
   await mongooseConnect()
 
-  // Get the token
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
 
   if (req.method === "POST") {
@@ -27,7 +26,7 @@ export default async function handler(req, res) {
       state,
       country,
       customerId,
-      priceId, // Receive priceId from the request body
+      priceId,
     } = req.body
 
     if (!customerId) {
@@ -35,23 +34,23 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Create a checkout session for a subscription
+      const nonRenewingPriceIds = ["price_1PlHo2EgdqLNJO1L1Sjs0YMz"]
+
       const checkoutSession = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "subscription",
         line_items: [
           {
-            price: priceId, // Use the received priceId
+            price: priceId,
             quantity: 1,
           },
         ],
-        customer: customerId, // Use only the customerId
+        customer: customerId,
         success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.headers.origin}/cancel`,
       })
 
-      // Save order with subscription details in the database
-      const order = await Order.create({
+      await Order.create({
         name,
         email,
         phoneNumber,
@@ -65,6 +64,7 @@ export default async function handler(req, res) {
           id: null,
           status: "pending",
           customerId: customerId,
+          isNonRenewing: nonRenewingPriceIds.includes(priceId),
         },
       })
 
@@ -83,7 +83,6 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Retrieve the order by customerId
       const order = await Order.findOne({
         "subscription.customerId": customerId,
       })
@@ -92,8 +91,10 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Order not found" })
       }
 
-      // Respond with the order and subscription details
+      const isSubscribed = order.subscription.status === "active"
+
       res.status(200).json({
+        isSubscribed,
         subscriptionId: order.subscription.id,
         subscriptionStatus: order.subscription.status,
         customerId: order.subscription.customerId,
@@ -138,6 +139,7 @@ export default async function handler(req, res) {
 //       state,
 //       country,
 //       customerId,
+//       priceId, // Receive priceId from the request body
 //     } = req.body
 
 //     if (!customerId) {
@@ -151,11 +153,11 @@ export default async function handler(req, res) {
 //         mode: "subscription",
 //         line_items: [
 //           {
-//             price: "price_1PkR5aEgdqLNJO1LeQdOm7X1", // Replace with your actual Stripe price ID
+//             price: priceId, // Use the received priceId
 //             quantity: 1,
 //           },
 //         ],
-//         customer: customerId,
+//         customer: customerId, // Use only the customerId
 //         success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
 //         cancel_url: `${req.headers.origin}/cancel`,
 //       })
@@ -169,7 +171,7 @@ export default async function handler(req, res) {
 //         zipCode,
 //         state,
 //         country,
-//         line_items: [{ price: "price_1PkR5aEgdqLNJO1LeQdOm7X1", quantity: 1 }],
+//         line_items: [{ price: priceId, quantity: 1 }],
 //         paid: false,
 //         subscription: {
 //           id: null,
