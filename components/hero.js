@@ -133,13 +133,56 @@ export default function Hero() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200">
-      <div className="container mx-auto py-16 px-4">
+      <div className="container mx-auto py-8 px-4">
         <motion.header
-          className="text-center mb-24"
+          className="flex justify-between items-center mb-16"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
           transition={{ duration: 0.8 }}
+        >
+          {session?.user?.name && (
+            <motion.p
+              className="text-2xl font-semibold text-purple-400"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              Welcome, {session.user.name}!
+            </motion.p>
+          )}
+          <motion.div
+            className="ml-auto"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            {session ? (
+              <Button
+                variant="outline"
+                onClick={() => signOut()}
+                className="bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700 py-2 px-4 text-lg"
+              >
+                Sign out
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                className="bg-purple-700 hover:bg-purple-600 text-white py-2 px-4 text-lg"
+                onClick={() => signIn()}
+              >
+                Sign in
+              </Button>
+            )}
+          </motion.div>
+        </motion.header>
+
+        <motion.div
+          className="text-center mb-24"
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          transition={{ duration: 0.8, delay: 0.3 }}
         >
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
             Experience the Best in TV Service
@@ -156,59 +199,24 @@ export default function Hero() {
               {coolPhrases[currentPhrase]}
             </motion.p>
           </AnimatePresence>
-          <motion.div
-            className="mt-20 gap-4 flex flex-col sm:flex-row w-full justify-center items-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-          >
-            {session ? (
-              <Button
-                variant="outline"
-                onClick={() => signOut()}
-                className="w-full sm:w-auto bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700 py-2 px-4 text-lg"
-              >
-                Sign out
-              </Button>
-            ) : (
-              <Button
-                variant="secondary"
-                className="w-full sm:w-auto bg-purple-700 hover:bg-purple-600 text-white py-2 px-4 text-lg"
-                onClick={() => signIn()}
-              >
-                Sign in
-              </Button>
-            )}
-          </motion.div>
-          {session?.user?.name && (
-            <motion.p
-              className="text-4xl md:text-6xl font-semibold text-purple-400 mt-8"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-            >
-              Welcome, {session.user.name}!
-            </motion.p>
-          )}
-        </motion.header>
+        </motion.div>
 
-        {status === "authenticated" && (
-          <motion.div
-            className="flex flex-col lg:flex-row items-center justify-center mb-32"
-            initial="hidden"
-            animate="visible"
-            variants={fadeIn}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <motion.img
-              src="/5.jpg"
-              alt="Bar Image"
-              className="w-full max-w-6xl h-auto rounded-3xl shadow-2xl"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            />
-          </motion.div>
-        )}
+        <motion.div
+          className="flex flex-col lg:flex-row items-center justify-center mb-32"
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <motion.img
+            src="/5.jpg"
+            alt="Bar Image"
+            className="w-full max-w-6xl h-auto rounded-3xl shadow-2xl"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.3 }}
+          />
+        </motion.div>
+
         <motion.div
           className="flex flex-col items-center justify-center py-16"
           initial="hidden"
