@@ -64,7 +64,7 @@ export default function Hero() {
         )
         if (response.ok) {
           const data = await response.json()
-          setIsSubscribed(data.subscriptionStatus === "active")
+          setIsSubscribed(data.isSubscribed)
         } else {
           console.error("Failed to fetch subscription:", response.statusText)
         }
